@@ -1,0 +1,15 @@
+{
+	"name": "developer-docs",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"workspaces": ["apps/site"],
+	"scripts": {
+		"build": "npm run build --workspace=@nt2-community/developer-docs-site",
+		"check": "npm run check --workspace=@nt2-community/developer-docs-site",
+		"dev": "npm run dev --workspace=@nt2-community/developer-docs-site"
+	},
+	"engines": {
+		"node": ">=24.16.0"
+	}
+}
