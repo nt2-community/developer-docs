@@ -3,6 +3,8 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { mdsvex } from 'mdsvex';
 import rehypeSlug from 'rehype-slug';
 
+import { remarkMermaid } from './src/lib/remark-mermaid.mjs';
+
 const base = process.env.GITHUB_PAGES_BASE || '';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -12,6 +14,7 @@ const config = {
 		vitePreprocess(),
 		mdsvex({
 			extensions: ['.md', '.svx'],
+			remarkPlugins: [remarkMermaid],
 			rehypePlugins: [rehypeSlug]
 		})
 	],

@@ -2,6 +2,7 @@
 	import '../app.css';
 	import { base } from '$app/paths';
 	import { page } from '$app/state';
+	import MermaidHydrate from '$lib/MermaidHydrate.svelte';
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
 	import { navSections } from '$lib/nav';
 	import type { LayoutData } from './$types';
@@ -63,6 +64,7 @@
 
 	<main class="min-w-0 flex-1">
 		{@render children()}
+		<MermaidHydrate />
 	</main>
 </div>
 
