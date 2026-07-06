@@ -1,9 +1,9 @@
 ---
 title: Field packs overview
-description: Open-source field pack repos and git submodule workflow.
+description: Open-source field pack repos and contribution workflow.
 ---
 
-## 1. Overview
+## Overview
 
 ### What a field pack is
 
@@ -11,19 +11,19 @@ A **field pack** is a versioned bundle of **built-in semantic field types** for 
 
 | Layer | Contents | Runs where |
 |-------|----------|------------|
-| **Data pack** | `FieldTypeDefinition` rows, capabilities, manifest **slice** | `@nt2/category-template-api` resolver, Workers-safe validation, CBF encode/decode |
-| **Runtime pack** (optional) | Svelte editors, validators, formatters | `@nt2/web` in-process via `FieldPackHost` ([048q]) |
+| **Data pack** | `FieldTypeDefinition` rows, capabilities, manifest **slice** | Published field-registry resolver, Workers-safe validation, CBF encode/decode |
+| **Runtime pack** (optional) | Svelte editors, validators, formatters | NT² Vault in-process via `FieldPackHost` |
 
 Field packs are **not**:
 
-- Category template packs ([048]) — templates only **compose** existing `FieldTypeId`s  
-- Micro-apps ([126]) — no iframe, no user install from URL  
-- User-defined field types ([DEC-056])  
-- Runtime-downloadable plugins — code ships **only** through the private product release train after submodule pin + review  
+- Category template packs — templates only **compose** existing `FieldTypeId`s
+- Micro-apps — no iframe, no user install from URL
+- User-defined field types
+- Runtime-downloadable plugins — code ships only through an audited NT² Vault release after review
 
-### Why git submodule
+### Why separate open repositories
 
-The **product monorepo stays private**. Domain packs are **open-source** in separate Git repositories and linked into the private tree as **git submodules**. Each app release builds from a **pinned submodule commit** audited by NT² maintainers.
+Domain packs live in **open-source** Git repositories. NT² maintainers pin audited commits when integrating packs into a Vault release.
 
 ```mermaid
 flowchart LR
@@ -32,47 +32,31 @@ flowchart LR
     PackB["field-pack-financial"]
     API["field-pack-api npm"]
   end
-  subgraph private["Private nt2 monorepo"]
-    Sub["external/field-packs/* submodules"]
-    Manifest["field-registry-manifest"]
-    Web["apps/web FieldPackHost"]
-    Release["@nt2/web release"]
-  end
-  PackA --> Sub
-  PackB --> Sub
-  API --> PackA
-  API --> PackB
-  Sub --> Manifest
-  Sub --> Web
-  Manifest --> Release
-  Web --> Release
+  PackA --> API
+  PackB --> API
+  PackA --> Release["NT² Vault release"]
+  PackB --> Release
 ```
-
-**Rejected for v1:** subtree merge (blurs open/closed history), separate CDN install of pack JS at runtime, per-user optional field-type feature flags ([095b] tier gating of **definitions**).
 
 ---
 
-## 2. Trust model
+## Trust model
 
-| Concern | Field pack (submodule) | Micro-app |
-|---------|------------------------|-----------|
-| **Source** | Open Git repo → submodule pin | Signed `.nt2app` / catalog |
-| **Trust boundary** | Merge on open repo + **NT² bump PR** on private monorepo | User install + iframe sandbox |
+| Concern | Field pack | Micro-app |
+|---------|------------|-----------|
+| **Source** | Open Git repo → audited pin | Signed `.nt2app` / catalog |
+| **Trust boundary** | Merge on open repo + NT² release integration | User install + iframe sandbox |
 | **Code execution** | Same JS context as vault (trusted) | `postMessage` SDK only |
 | **Catalog** | **Global** — all users share one manifest after release | Per-user install set |
 | **Decode / sync** | All shipped clients must resolve `fieldIndex` | N/A |
 
-**Normative rule:** merging to the **open pack repo** does **not** ship to end users. Shipping requires a **private monorepo PR** that:
-
-1. Bumps the submodule SHA (or tag)  
-2. Merges manifest rows with assigned `fieldIndex`  
-3. Passes full NT² CI (including security review for runtime code)  
+**Normative rule:** merging to the **open pack repo** does **not** ship to end users. NT² maintainers assign `fieldIndex` values, merge manifest rows, and ship through a Vault release.
 
 ---
 
-## 3. Public API contract
+## Public API contract
 
-Open pack repositories **must not** depend on the private `nt2` monorepo. They depend on a **published** thin contract package (planned name):
+Open pack repositories depend on a **published** thin contract package:
 
 **`@nt2/field-pack-api`** (public npm; types + validators only)
 
@@ -83,31 +67,28 @@ Open pack repositories **must not** depend on the private `nt2` monorepo. They d
 | `validateManifestSlice(slice)` | Slice shape; **no** `fieldIndex` in contributor slice |
 | `FIELD_PACK_API_VERSION` | Peer dependency alignment |
 
-**Private monorepo:** implements full `FieldTypeResolver` and merged manifest; may re-export or wrap `@nt2/field-pack-api` from `@nt2/category-template-api` until the public package is extracted.
-
 **Versioning:** pack `package.json` declares `"peerDependencies": { "@nt2/field-pack-api": "^1.0.0" }`. Breaking API changes require a major bump and coordinated bumps across open packs.
 
 ---
 
-## 4. Open pack repository layout
+## Open pack repository layout
 
 **One domain per repository** (recommended), e.g. `github.com/nt2-community/field-pack-it-assets`.
 
 ```text
 field-pack-it-assets/
-  LICENSE                    # Apache-2.0 or MIT
+  LICENSE
   README.md
-  CONTRIBUTING.md            # Link to this guide
-  package.json               # @nt2-field-pack/it-assets
+  CONTRIBUTING.md
+  package.json
   pack.meta.json
   src/
-    definitions.ts             # FieldTypeDefinition[]
-    manifest.slice.json        # Proposed rows — no fieldIndex
-    index.ts                   # export definitions + slice
-  runtime/                     # Optional — 048q
-    editors/
-    register.ts                # export registerItAssetsPack(host)
-  src/*.unit.test.ts
+    definitions.ts
+    manifest.slice.json
+    index.ts
+    runtime/          # Optional — custom editors
+      editors/
+      register.ts
   .github/workflows/ci.yml
 ```
 
@@ -121,16 +102,15 @@ field-pack-it-assets/
   "maintainers": ["@org/it-assets-team"],
   "status": "incubating",
   "license": "Apache-2.0",
-  "repository": "https://github.com/nt2-community/field-pack-it-assets",
-  "specRef": "https://github.com/nt2-community/field-pack-it-assets/blob/main/docs/FIELDS.md"
+  "repository": "https://github.com/nt2-community/field-pack-it-assets"
 }
 ```
 
 | Field | Meaning |
 |-------|---------|
-| `packId` | Stable id; matches manifest `packId`; used in `FieldPackHost` allowlist |
-| `publisher` | `nt2-official` (private core pack) or `nt2-community` / org slug |
-| `status` | `incubating` \| `graduated` |
+| `packId` | Stable id; matches manifest `packId` |
+| `publisher` | `nt2-official` or `nt2-community` / org slug |
+| `status` | `incubating` \| `graduated` — see [Maturity](#maturity-incubating-vs-graduated) |
 | `maintainers` | GitHub teams/users for open-repo review |
 
 ### `manifest.slice.json` (contributor proposal)
@@ -146,7 +126,7 @@ field-pack-it-assets/
 }
 ```
 
-**Contributors must not assign `fieldIndex`.** NT² catalog curators append indices in the **private** merged manifest.
+**Contributors must not assign `fieldIndex`.** NT² catalog curators append indices in the published field registry.
 
 ### Naming
 
@@ -158,312 +138,79 @@ field-pack-it-assets/
 
 ---
 
-## 5. Private monorepo integration (git submodule)
-
-### Submodule paths (planned)
-
-```text
-nt2/                                    # private
-  .gitmodules
-  external/field-packs/
-    it-assets/      → submodule URL + pinned commit
-    financial/
-  pkgs/
-    field-registry-core/                  # nt2-official; not submodule
-    field-registry-manifest/              # merged authority + codegen
-  apps/web/src/lib/kernel/templates/
-    fieldPackBootstrap.ts               # allowlist + register*Pack()
-```
-
-Example `.gitmodules`:
-
-```ini
-[submodule "external/field-packs/it-assets"]
-  path = external/field-packs/it-assets
-  url = https://github.com/nt2-community/field-pack-it-assets.git
-  branch = main
-```
-
-### npm workspaces
-
-Submodule packages must expose `package.json` with a valid `name` so `npm ci` at the private root resolves them (after `git submodule update --init --recursive`).
-
-**CI normative step** (private):
-
-```bash
-git submodule update --init --recursive
-npm ci
-npm run check
-npm run test:unit
-```
-
-### Pinning policy
-
-| Rule | Detail |
-|------|--------|
-| **Production** | Submodule points to a **tag** or explicit commit SHA reviewed in bump PR |
-| **No auto-bump** | Dependabot must **not** auto-merge submodule updates on the private repo |
-| **Reproducible builds** | Release tags record submodule SHAs in release notes or lock manifest |
-
-### Official core pack
-
-`pkgs/field-registry-core` remains **in-tree** on the private monorepo (`publisher: nt2-official`). Community packs use submodules under `external/field-packs/`.
-
----
-
-## 6. Contribution workflow
+## Contribution workflow
 
 ```mermaid
 sequenceDiagram
   participant C as Contributor
   participant O as Open pack repo
   participant M as Pack maintainer
-  participant N as NT2 catalog curator
-  participant P as Private nt2
+  participant N as NT² catalog curator
 
   C->>O: PR definitions tests manifest.slice
   O->>O: CI field-pack-api unit tests
   M->>O: Merge
-  M->>N: Request index allocation RFC issue
-  N->>P: Bump submodule PR assign fieldIndex merge manifest
-  P->>P: CI security review release
+  M->>N: Request index allocation
+  N->>N: Release integration review
 ```
 
 ### Step 1 — RFC (recommended for new domains)
 
-Open an issue on the **pack repo** (or NT² public tracker if provided) before large additions:
+Open an issue on the **pack repo** before large additions:
 
-- Real-world document types covered  
-- Proposed `FieldTypeId` list and capabilities  
-- Overlap with existing types in core catalog  
-- Need for custom runtime editor vs generic `singleLine` / `date`  
+- Real-world document types covered
+- Proposed `FieldTypeId` list and capabilities
+- Overlap with existing types in core catalog
+- Need for custom runtime editor vs generic `singleLine` / `date`
 
-Catalog curator responds with: approved `packId`, index range or per-row allocation plan, reviewer assignment.
+Catalog curator responds with: approved `packId`, index allocation plan, reviewer assignment.
 
 ### Step 2 — Open repository PR
 
 Contributor implements definitions + tests + `manifest.slice.json` update. See [Appendix A](#appendix-a--open-pack-pr-checklist).
 
-### Step 3 — Private bump PR (NT²)
+### Step 3 — Release integration
 
-After open-repo merge and tag (e.g. `v1.2.0`):
-
-1. Bump submodule to tag commit  
-2. Run manifest merge script → assign `fieldIndex`, bump `registryVersion`  
-3. Register runtime pack in `fieldPackBootstrap.ts` if needed  
-4. Add English i18n keys in `apps/web` (see [§11](#11-i18n-and-documentation))  
-5. CODEOWNERS: `@nt2/core-catalog` + domain maintainer  
-
-See [Appendix B](#appendix-b--private-bump-pr-checklist).
-
-**External contributors** typically cannot merge step 3; they request a bump via issue on the open repo after their PR ships.
+After your open-repo PR merges and is tagged, open an issue on the pack repo requesting NT² release integration. External contributors typically coordinate with pack maintainers and catalog curators for this step.
 
 ---
 
-## 2. Trust model
+## Maturity: incubating vs graduated
 
-| Concern | Field pack (submodule) | Micro-app |
-|---------|------------------------|-----------|
-| **Source** | Open Git repo → submodule pin | Signed `.nt2app` / catalog |
-| **Trust boundary** | Merge on open repo + **NT² bump PR** on private monorepo | User install + iframe sandbox |
-| **Code execution** | Same JS context as vault (trusted) | `postMessage` SDK only |
-| **Catalog** | **Global** — all users share one manifest after release | Per-user install set |
-| **Decode / sync** | All shipped clients must resolve `fieldIndex` | N/A |
+| `pack.meta.json` status | In merged manifest | Template picker | Runtime chunk in production |
+|-------------------------|--------------------|-----------------|----------------------------|
+| **`incubating`** | After curator merge | Staging/dev only (or hidden) | Staging/dev only |
+| **`graduated`** | Yes | All environments | All environments |
 
-**Normative rule:** merging to the **open pack repo** does **not** ship to end users. Shipping requires a **private monorepo PR** that:
-
-1. Bumps the submodule SHA (or tag)  
-2. Merges manifest rows with assigned `fieldIndex`  
-3. Passes full NT² CI (including security review for runtime code)  
+Default for new community packs: **`incubating`** until NT² signs off on UX, security, and localization.
 
 ---
 
-## 3. Public API contract
+## Security rules
 
-Open pack repositories **must not** depend on the private `nt2` monorepo. They depend on a **published** thin contract package (planned name):
-
-**`@nt2/field-pack-api`** (public npm; types + validators only)
-
-| Exported | Purpose |
-|----------|---------|
-| `FieldTypeDefinition`, `FieldTypeId`, `FieldEditorKind`, … | Same shapes as `@nt2/category-template-api` field types |
-| `validateFieldDefinition(def)` | Pack-local CI |
-| `validateManifestSlice(slice)` | Slice shape; **no** `fieldIndex` in contributor slice |
-| `FIELD_PACK_API_VERSION` | Peer dependency alignment |
-
-**Private monorepo:** implements full `FieldTypeResolver` and merged manifest; may re-export or wrap `@nt2/field-pack-api` from `@nt2/category-template-api` until the public package is extracted.
-
-**Versioning:** pack `package.json` declares `"peerDependencies": { "@nt2/field-pack-api": "^1.0.0" }`. Breaking API changes require a major bump and coordinated bumps across open packs.
-
----
-
-## 4. Open pack repository layout
-
-**One domain per repository** (recommended), e.g. `github.com/nt2-community/field-pack-it-assets`.
-
-```text
-field-pack-it-assets/
-  LICENSE                    # Apache-2.0 or MIT
-  README.md
-  CONTRIBUTING.md            # Link to this guide
-  package.json               # @nt2-field-pack/it-assets
-  pack.meta.json
-  src/
-    definitions.ts             # FieldTypeDefinition[]
-    manifest.slice.json        # Proposed rows — no fieldIndex
-    index.ts                   # export definitions + slice
-  runtime/                     # Optional — 048q
-    editors/
-    register.ts                # export registerItAssetsPack(host)
-  src/*.unit.test.ts
-  .github/workflows/ci.yml
-```
-
-### `pack.meta.json` (normative)
-
-```json
-{
-  "packId": "it-assets",
-  "displayName": "IT asset fields",
-  "publisher": "nt2-community",
-  "maintainers": ["@org/it-assets-team"],
-  "status": "incubating",
-  "license": "Apache-2.0",
-  "repository": "https://github.com/nt2-community/field-pack-it-assets",
-  "specRef": "https://github.com/nt2-community/field-pack-it-assets/blob/main/docs/FIELDS.md"
-}
-```
-
-| Field | Meaning |
-|-------|---------|
-| `packId` | Stable id; matches manifest `packId`; used in `FieldPackHost` allowlist |
-| `publisher` | `nt2-official` (private core pack) or `nt2-community` / org slug |
-| `status` | `incubating` \| `graduated` |
-| `maintainers` | GitHub teams/users for open-repo review |
-
-### `manifest.slice.json` (contributor proposal)
-
-```json
-{
-  "packId": "it-assets",
-  "proposedVersion": "1.2.0",
-  "rows": [
-    { "fieldTypeId": "serverHostname" },
-    { "fieldTypeId": "serverIpAddress" }
-  ]
-}
-```
-
-**Contributors must not assign `fieldIndex`.** NT² catalog curators append indices in the **private** merged manifest.
-
-### Naming
-
-| Artifact | Convention |
-|----------|------------|
-| `packId` | kebab-case, e.g. `it-assets`, `financial` |
-| `FieldTypeId` | camelCase semantic id, e.g. `serverHostname` — global uniqueness |
-| Repo name | `field-pack-<packId>` |
-
----
-
-## 5. Private monorepo integration (git submodule)
-
-### Submodule paths (planned)
-
-```text
-nt2/                                    # private
-  .gitmodules
-  external/field-packs/
-    it-assets/      → submodule URL + pinned commit
-    financial/
-  pkgs/
-    field-registry-core/                  # nt2-official; not submodule
-    field-registry-manifest/              # merged authority + codegen
-  apps/web/src/lib/kernel/templates/
-    fieldPackBootstrap.ts               # allowlist + register*Pack()
-```
-
-Example `.gitmodules`:
-
-```ini
-[submodule "external/field-packs/it-assets"]
-  path = external/field-packs/it-assets
-  url = https://github.com/nt2-community/field-pack-it-assets.git
-  branch = main
-```
-
-### npm workspaces
-
-Submodule packages must expose `package.json` with a valid `name` so `npm ci` at the private root resolves them (after `git submodule update --init --recursive`).
-
-**CI normative step** (private):
-
-```bash
-git submodule update --init --recursive
-npm ci
-npm run check
-npm run test:unit
-```
-
-### Pinning policy
+Field runtime code is **trusted in-process** — stricter than data-only packs.
 
 | Rule | Detail |
 |------|--------|
-| **Production** | Submodule points to a **tag** or explicit commit SHA reviewed in bump PR |
-| **No auto-bump** | Dependabot must **not** auto-merge submodule updates on the private repo |
-| **Reproducible builds** | Release tags record submodule SHAs in release notes or lock manifest |
-
-### Official core pack
-
-`pkgs/field-registry-core` remains **in-tree** on the private monorepo (`publisher: nt2-official`). Community packs use submodules under `external/field-packs/`.
+| No `eval`, no dynamic `import(userUrl)` | Static paths only |
+| Secret fields | Set `capabilities.screenCaptureProtected`, share masks via registry capabilities |
+| Dependencies | Minimize deps; new npm deps on open pack require NT² review |
+| No network in editors | No third-party scripts, fonts, or analytics |
+| Crypto-adjacent types | Require security review before release |
 
 ---
 
-## 6. Contribution workflow
+## Appendix A — Open pack PR checklist
 
-```mermaid
-sequenceDiagram
-  participant C as Contributor
-  participant O as Open pack repo
-  participant M as Pack maintainer
-  participant N as NT2 catalog curator
-  participant P as Private nt2
-
-  C->>O: PR definitions tests manifest.slice
-  O->>O: CI field-pack-api unit tests
-  M->>O: Merge
-  M->>N: Request index allocation RFC issue
-  N->>P: Bump submodule PR assign fieldIndex merge manifest
-  P->>P: CI security review release
-```
-
-### Step 1 — RFC (recommended for new domains)
-
-Open an issue on the **pack repo** (or NT² public tracker if provided) before large additions:
-
-- Real-world document types covered  
-- Proposed `FieldTypeId` list and capabilities  
-- Overlap with existing types in core catalog  
-- Need for custom runtime editor vs generic `singleLine` / `date`  
-
-Catalog curator responds with: approved `packId`, index range or per-row allocation plan, reviewer assignment.
-
-### Step 2 — Open repository PR
-
-Contributor implements definitions + tests + `manifest.slice.json` update. See [Appendix A](#appendix-a--open-pack-pr-checklist).
-
-### Step 3 — Private bump PR (NT²)
-
-After open-repo merge and tag (e.g. `v1.2.0`):
-
-1. Bump submodule to tag commit  
-2. Run manifest merge script → assign `fieldIndex`, bump `registryVersion`  
-3. Register runtime pack in `fieldPackBootstrap.ts` if needed  
-4. Add English i18n keys in `apps/web` (see [§11](#11-i18n-and-documentation))  
-5. CODEOWNERS: `@nt2/core-catalog` + domain maintainer  
-
-See [Appendix B](#appendix-b--private-bump-pr-checklist).
-
-**External contributors** typically cannot merge step 3; they request a bump via issue on the open repo after their PR ships.
+- [ ] New/changed `FieldTypeDefinition` rows with capabilities documented
+- [ ] `manifest.slice.json` updated — **no** `fieldIndex`
+- [ ] Unit tests pass against `@nt2/field-pack-api` peer range
+- [ ] No duplicate `fieldTypeId` within pack; RFC if near existing core types
+- [ ] `pack.meta.json` `packId` matches slice
+- [ ] Runtime code (if any) uses static `import()` paths only
+- [ ] `docs/FIELDS.md` updated for user-visible semantics
+- [ ] LICENSE file present
 
 ---
+
+Field packs ship through the open pack repository and NT² release process. Contributors work entirely in public repositories.

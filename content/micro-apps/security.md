@@ -32,7 +32,7 @@ The sandbox limits blast radius but **does not** sanitize your HTML — you are 
 | ID | Rule |
 |----|------|
 | **J1** | **MUST NOT** log decrypted payloads or sensitive user input in production builds. |
-| **J2** | **MUST NOT** send vault data to external servers — local-first and zero-knowledge apply to your app too ([DEC-001], [DEC-002]). |
+| **J2** | **MUST NOT** send vault data to external servers — local-first and zero-knowledge apply to your app too (). |
 | **J3** | **MUST** clear in-memory secrets on `LOCKED` / teardown. |
 | **J4** | **MUST NOT** embed API keys or credentials in the bundle (users can inspect local files). |
 | J5 | **SHOULD NOT** persist SDK-returned plaintext in `localStorage` / `sessionStorage`. |
@@ -44,7 +44,7 @@ The sandbox limits blast radius but **does not** sanitize your HTML — you are 
 | **K1** | **MUST NOT** persist decrypted SDK payloads across sessions — re-fetch after unlock. |
 | **K2** | **MUST NOT** copy sensitive values to clipboard without explicit user action and clear feedback. |
 | **K3** | **MUST** treat `LOCKED` as a hard stop — halt in-flight calls; do not auto-retry writes. |
-| K4 | **SHOULD** auto-clear clipboard after 30–60 s when copying secrets ([N12]). |
+| K4 | **SHOULD** auto-clear clipboard after 30–60 s when copying secrets (N12). |
 | K5 | **SHOULD** obscure sensitive fields when `document.visibilityState === 'hidden'`. |
 
 ### L — Supply chain and bundle integrity
@@ -52,7 +52,7 @@ The sandbox limits blast radius but **does not** sanitize your HTML — you are 
 | ID | Rule |
 |----|------|
 | **L1** | **MUST** set `entry.integrity` to a valid **SHA-384** SRI hash (`sha384-…`) of the entry file; host rejects mismatch at install. |
-| **L2** | **MUST** sign the manifest with your publisher **Vault Key DID**; host verifies before install ([DEC-071]). |
+| **L2** | **MUST** sign the manifest with your publisher **Vault Key DID**; host verifies before install (). |
 | **L3** | **MUST** pin `sdkVersion` to the protocol package you tested against; show a user-readable "please update" message on `PROTOCOL_MISMATCH`. |
 | **L4** | **MUST NOT** ship a vendored `@nt2/vault-sdk-protocol` older than the host's `PROTOCOL_VERSION` at submission time. |
 | L5 | **SHOULD** ship `CHANGELOG.md` in your source repo for reviewer diffs. |
@@ -70,7 +70,7 @@ console.log('sha384-'+h);
 
 ### M — Writer awareness
 
-Only one browser tab is the **Writer** for mutations ([046b]).
+Only one browser tab is the **Writer** for mutations.
 
 | ID | Rule |
 |----|------|
@@ -90,4 +90,4 @@ Suggested copy: *"Another tab is editing this vault. Switch to that tab or close
 
 ---
 
-See also UX integration norms in the published [Quick start](https://nt2-community.github.io/developer-docs/micro-apps/quick-start) and [SDK reference](https://nt2-community.github.io/developer-docs/micro-apps/sdk).
+See also UX integration norms in the [Quick start](https://nt2-community.github.io/developer-docs/micro-apps/quick-start) and [SDK reference](https://nt2-community.github.io/developer-docs/micro-apps/sdk).

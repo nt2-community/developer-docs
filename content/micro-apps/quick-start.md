@@ -10,8 +10,8 @@ description: Bundle layout, manifest, and minimal SDK client.
 ```
 my-app/
 ├── manifest.json
-├── index.html          # entry.path
-├── app.js              # optional split assets
+├── index.html # entry.path
+├── app.js # optional split assets
 └── styles.css
 ```
 
@@ -19,7 +19,7 @@ Pack as `my-app.nt2app` (zip) for distribution. The host extracts to `vaults/{va
 
 ### Example manifest
 
-See the pilot app [`hello/manifest.json`]:
+See the pilot app `hello/manifest.json`:
 
 ```json
 {
@@ -54,7 +54,7 @@ See the pilot app [`hello/manifest.json`]:
 
 ### Minimal SDK client
 
-The pilot [`hello/index.html`] shows a vanilla JS client. Pattern:
+The pilot `hello/index.html` shows a vanilla JS client. Pattern:
 
 1. Generate a UUID `id` per request.
 2. `window.parent.postMessage({ protocolVersion: 1, id, type, … }, '*')`.
@@ -65,9 +65,9 @@ Use `@nt2/vault-sdk-protocol` types in TypeScript projects for compile-time safe
 
 ### Development without a full install
 
-In `import.meta.env.DEV`, the host can load the hello pilot (synced from `microapps/hello/dist/`) without a real install record. For your own app, install via Settings → Micro-apps (requires the `microApps` preview feature enabled on staging/dev) or use the E2E test bridge in dev builds.
-
 ---
+
+Replace the placeholder manifest above with your own app id, permissions, and integrity hash.
 
 ### Pilot manifest (reference)
 
@@ -88,6 +88,4 @@ In `import.meta.env.DEV`, the host can load the hello pilot (synced from `microa
 }
 ```
 
-### Pilot SDK pattern
-
-See the `nt2-app-hello` listing in the [micro-app catalog](https://nt2-community.github.io/micro-apps-catalog/) for a installable pilot bundle.
+Install the **nt2-app-hello** listing from the [micro-app catalog](https://nt2-community.github.io/micro-apps-catalog/) to study a signed pilot bundle.

@@ -45,15 +45,13 @@ For each slug in a catalog listing, include **one sentence** explaining why it i
 
 ### 3.4 Feed protocol SDK
 
-> **Spec:** [128c — Feed micro-app SDK] · **Protocol:** [`@nt2/vault-sdk-protocol`] feed RPC types
-
 Feed apps read and publish **opaque application bytes** — the host handles encryption, signing, and relay upload. You define your own JSON (or other) schema inside `applicationPayload`; the kernel never validates it.
 
 #### Permissions
 
 ```json
 {
-  "permissions": ["vault:status", "feed:read", "feed:publish"]
+ "permissions": ["vault:status", "feed:read", "feed:publish"]
 }
 ```
 
@@ -117,7 +115,7 @@ Prefer `SUBSCRIBE_FEED_ENTRIES` for feed-only apps. Alternatively, with both `fe
 
 Push payloads never include decrypted bytes — always fetch via `FEED_ENTRY_READ` after `FEED_ENTRY_NOTIFY`.
 
-#### Contact profile read ([spec 129])
+#### Contact profile read
 
 Grant `contactProfile:read` when your app needs identity context for a **specific contact** the user has already accepted (consent-governed profile share).
 
@@ -129,8 +127,8 @@ Response payload (`OK`):
 
 ```json
 {
-  "fields": { "displayName": "Sam", "role": "Engineer" },
-  "issuanceClaims": [{ "issuanceId": "…", "programKind": "membership", "claimKey": "fullName", "claimValue": "Sam Example" }]
+ "fields": { "displayName": "Sam", "role": "Engineer" },
+ "issuanceClaims": [{ "issuanceId": "…", "programKind": "membership", "claimKey": "fullName", "claimValue": "Sam Example" }]
 }
 ```
 

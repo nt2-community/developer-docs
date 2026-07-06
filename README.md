@@ -21,16 +21,9 @@ Community hub: https://nt2-community.github.io/
 | `/templates/catalog` | Template catalog contribution |
 | `/field-packs/overview` | Field pack submodule workflow |
 
-## Sync from private monorepo
+## Contribute
 
-Normative specs live in the private `nt2` repo. Maintainers refresh Markdown via:
-
-```bash
-# In private nt2 repo
-npm run community:sync-developer-docs
-```
-
-## Local development
+Doc fixes welcome via PR — see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ```bash
 npm install

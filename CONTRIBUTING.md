@@ -1,6 +1,6 @@
 # Contributing to NT² developer docs
 
-This site publishes **author-facing excerpts** of NT² ecosystem contracts. Executable acceptance criteria remain in the private `nt2` monorepo `specs/` tree.
+This site publishes **author-facing** documentation for the NT² Vault ecosystem. Normative contracts are maintained by NT² maintainers and synced into this public repository.
 
 ## PR workflow
 
@@ -9,15 +9,12 @@ This site publishes **author-facing excerpts** of NT² ecosystem contracts. Exec
 3. Open a PR — CI runs `npm run check`.
 4. Maintainers review for accuracy against shipped vault behavior.
 
-## Syncing from private specs
+## Content policy
 
-For bulk updates, NT² maintainers run `npm run community:sync-developer-docs` in the private monorepo. That script rewrites internal links to public `nt2-community.github.io` URLs. Do not commit private-repo-relative paths in published artifacts.
-
-## Style
-
-- English prose, accessible headings
-- Link to live catalog sites (`/micro-apps-catalog/`, `/category-templates-catalog/`) rather than duplicating catalog data
-- No third-party trackers or fonts ([DEC-024](https://github.com/nt2/nt2/blob/main/docs/DECISIONS.md#dec-024-no-third-party-scripts))
+- **Do not** reference private product repositories, internal spec numbers, or monorepo file paths.
+- **Do not** document maintainer-only commands or internal CI steps.
+- Link to live community sites (`/micro-apps-catalog/`, `/category-templates-catalog/`, `/developer-docs/`) rather than duplicating catalog data.
+- No third-party trackers or fonts on the site.
 
 ## Questions
 

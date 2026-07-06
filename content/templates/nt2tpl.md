@@ -25,7 +25,7 @@ description: Offline category template artifact format for NT² Vault.
 ## Import path
 
 1. Download a `.nt2tpl` from the [template catalog](https://nt2-community.github.io/category-templates-catalog/)
-2. Open **se.nt2.me** → Settings → Templates
-3. Import the file (SET-TPL-02)
+2. Open [Vault → Settings → Templates](https://se.nt2.me/settings/templates)
+3. Import the downloaded file
 
 Community templates are validated against the **built-in field type catalog** only — unknown field types are rejected.

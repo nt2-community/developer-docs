@@ -18,23 +18,23 @@ The vault **Host** installs the bundle, shows a permission consent dialog, mount
 
 ```mermaid
 flowchart TB
-  subgraph author["Your bundle (untrusted)"]
-    HTML["index.html + assets"]
-    MANIFEST["manifest.json"]
-  end
+ subgraph author["Your bundle (untrusted)"]
+ HTML["index.html + assets"]
+ MANIFEST["manifest.json"]
+ end
 
-  subgraph host["NT² vault host (trusted)"]
-    INSTALL["Install — SRI + signature verify"]
-    SANDBOX["Sandbox iframe"]
-    SDK["vaultSdkHost — permission gate"]
-    KERNEL["Kernel — crypto, repos"]
-  end
+ subgraph host["NT² vault host (trusted)"]
+ INSTALL["Install — SRI + signature verify"]
+ SANDBOX["Sandbox iframe"]
+ SDK["vaultSdkHost — permission gate"]
+ KERNEL["Kernel — crypto, repos"]
+ end
 
-  MANIFEST --> INSTALL
-  INSTALL --> SANDBOX
-  SANDBOX <-->|"postMessage"| SDK
-  SDK --> KERNEL
-  SANDBOX -.->|"blocked"| KERNEL
+ MANIFEST --> INSTALL
+ INSTALL --> SANDBOX
+ SANDBOX <-->|"postMessage"| SDK
+ SDK --> KERNEL
+ SANDBOX -.->|"blocked"| KERNEL
 ```
 
 You control everything **above** the iframe boundary. The host enforces permissions, Writer rules, lock state, and field-level read/write masks at the SDK layer.
