@@ -108,4 +108,14 @@
 .prose-docs :is(pre.mermaid svg) {
 	max-width: 100%;
 	height: auto;
+	color: var(--color-base-content);
+}
+
+/* SVG text uses fill, not color — ensure contrast on light DaisyUI theme */
+[data-theme='light'] .prose-docs :is(pre.mermaid svg text) {
+	fill: #18181b;
+}
+
+[data-theme='dark'] .prose-docs :is(pre.mermaid svg text) {
+	fill: #e7e9ea;
 }
