@@ -1,6 +1,6 @@
 ---
 title: Quick start
-description: Bundle layout, manifest, and minimal SDK client.
+description: Bundle layout, manifest, and @nt2/vault-sdk client setup.
 ---
 
 ## 2. Quick start
@@ -46,26 +46,55 @@ See the pilot app `hello/manifest.json`:
 | Field | Notes |
 |-------|-------|
 | `id` | Stable slug — **never rename** after publish |
-| `sdkVersion` | Semver of `@nt2/vault-sdk-protocol` you built against |
+| `sdkVersion` | Semver of **`@nt2/vault-sdk`** you built against (matches npm package version) |
 | `publisher` | Your Vault Key DID (`did:key:…`) — used to verify `signature` |
 | `permissions` | Minimum slugs required (see [§3.2](#32-permissions)) |
 | `entry.integrity` | **SHA-384** SRI hash of entry file bytes (`sha384-…`) |
 | `routes` | Optional nav entries in vault shell after install |
 
-### Minimal SDK client
+### SDK-first client (recommended)
 
-The pilot `hello/index.html` shows a vanilla JS client. Pattern:
+Install the typed client in your bundle build (esbuild, Vite, etc.):
 
-1. Generate a UUID `id` per request.
-2. `window.parent.postMessage({ protocolVersion: 1, id, type, … }, '*')`.
-3. Listen for `{ id, type: 'OK' | 'ERR', … }` on `window.addEventListener('message', …)`.
-4. Enforce a timeout (e.g. 10 s) so the UI never hangs.
+```bash
+npm install @nt2/vault-sdk
+```
 
-Use `@nt2/vault-sdk-protocol` types in TypeScript projects for compile-time safety. Pin `PROTOCOL_VERSION` from the package — do not hard-code a stale integer.
+The hello pilot source uses `createVaultSdkClient()` — correlation, timeouts, and typed responses are handled for you:
 
-### Development without a full install
+```typescript
+import { createVaultSdkClient, VaultSdkError } from '@nt2/vault-sdk';
 
----
+const client = createVaultSdkClient();
+
+async function loadNotes() {
+	const status = await client.getStatus();
+	console.log('Connected:', status.displayName);
+
+	const { rows } = await client.items.forCategory('note').list();
+	for (const row of rows) {
+		console.log(row.title);
+	}
+}
+
+async function createNote(title: string) {
+	try {
+		await client.items.forCategory('note').create({
+			title,
+			body: 'Created by my micro-app.'
+		});
+	} catch (error) {
+		if (error instanceof VaultSdkError) {
+			// Map error.code — see Appendix B
+			console.error(error.code, error.message);
+		}
+	}
+}
+```
+
+Bundle `@nt2/vault-sdk` into your entry script (see your bundler configuration). Pin `sdkVersion` in `manifest.json` to the same semver as your npm dependency.
+
+For unit tests without a browser host, use `@nt2/vault-sdk/testing` (`createMockVaultSdkHost`).
 
 Replace the placeholder manifest above with your own app id, permissions, and integrity hash.
 
@@ -81,7 +110,7 @@ Replace the placeholder manifest above with your own app id, permissions, and in
 	"entry": {
 		"type": "iframe",
 		"path": "index.html",
-		"integrity": "sha384-ek3vaFKe0ug4SP1+PO1ZrjN1RI8aZqQPGwD/O33IfNvCaVmbo8Q89b7y4QWREcEX"
+		"integrity": "sha384-placeholder-recomputed-at-build"
 	},
 	"routes": [{ "path": "/", "label": "Hello" }],
 	"minHostVersion": "0.0.1"

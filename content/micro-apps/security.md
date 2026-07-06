@@ -9,7 +9,7 @@ description: Security obligations for micro-app authors.
 
 | ID | Rule |
 |----|------|
-| **H1** | **MUST** access vault data **only** via Vault SDK `postMessage` — **MUST NOT** touch `window.parent.localStorage`, `indexedDB`, OPFS, `__TAURI_INTERNALS__`, or host plugins. |
+| **H1** | **MUST** access vault data **only** via **`@nt2/vault-sdk`** — **MUST NOT** touch `window.parent.localStorage`, `indexedDB`, OPFS, `__TAURI_INTERNALS__`, or host plugins. |
 | **H2** | **MUST NOT** attempt to export vault `CryptoKey` material via `crypto.subtle.exportKey` or any other path. |
 | **H3** | **MUST NOT** load remote JavaScript at runtime (`import('https://…')`, dynamic `<script src>`, `eval` of remote strings). |
 | **H4** | **MUST NOT** embed cross-origin iframes to external domains. |
@@ -53,8 +53,8 @@ The sandbox limits blast radius but **does not** sanitize your HTML — you are 
 |----|------|
 | **L1** | **MUST** set `entry.integrity` to a valid **SHA-384** SRI hash (`sha384-…`) of the entry file; host rejects mismatch at install. |
 | **L2** | **MUST** sign the manifest with your publisher **Vault Key DID**; host verifies before install (). |
-| **L3** | **MUST** pin `sdkVersion` to the protocol package you tested against; show a user-readable "please update" message on `PROTOCOL_MISMATCH`. |
-| **L4** | **MUST NOT** ship a vendored `@nt2/vault-sdk-protocol` older than the host's `PROTOCOL_VERSION` at submission time. |
+| **L3** | **MUST** pin `sdkVersion` to the **`@nt2/vault-sdk`** version you tested against; show a user-readable "please update" message on `PROTOCOL_MISMATCH`. |
+| **L4** | **MUST NOT** ship a vendored **`@nt2/vault-sdk`** (or bundled `@nt2/vault-sdk-protocol`) older than the host's supported protocol at submission time. |
 | L5 | **SHOULD** ship `CHANGELOG.md` in your source repo for reviewer diffs. |
 
 **Compute SHA-384 integrity (example):**

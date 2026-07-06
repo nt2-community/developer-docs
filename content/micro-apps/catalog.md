@@ -7,7 +7,7 @@ description: Build, sign, and list apps on the community catalog.
 
 ### Build pipeline (recommended)
 
-1. **Develop** UI against `@nt2/vault-sdk-protocol` types.
+1. **Develop** UI with **`@nt2/vault-sdk`** (`createVaultSdkClient`); pin `sdkVersion` in `manifest.json` to the same semver.
 2. **Bundle** static assets — no remote runtime dependencies.
 3. **Compute** `entry.integrity` over the exact entry bytes shipped.
 4. **Sign** canonical manifest JSON with your Vault Key DID private key; set `publisher` + `signature`.
@@ -70,7 +70,7 @@ Use this checklist before submitting to the NT² catalog or an internal pilot re
 - [ ] **A1** — No parent-frame navigation or DOM access
 - [ ] **A2** — Locked state clears secrets and shows safe UI
 - [ ] **A3** — No imitation of NT² unlock / Settings / shell chrome
-- [ ] **A4** — SDK-only `postMessage`; no `window.parent.*` hacks
+- [ ] **A4** — `@nt2/vault-sdk` client (or Appendix C wire protocol for prototypes only); no `window.parent.*` hacks
 - [ ] **B1** — Mobile-first; ≥ 44×44 px tap targets
 - [ ] **B2** — `dvh` + safe-area insets on full-height layouts
 - [ ] **B3** — No `window.confirm` / `alert` / `prompt`
@@ -147,6 +147,37 @@ Map every error to user-facing copy and app behavior. **Never** display raw `cod
 | `INTEGRITY` | "Installation is corrupted. Reinstall the app." | Block usage; prompt reinstall |
 | `INTERNAL` | "Something went wrong. Try again." | Log internally in dev only; offer retry |
 
+### Using `VaultSdkError` in TypeScript
+
+When you use `@nt2/vault-sdk`, failed RPCs throw `VaultSdkError` with `code`, `message`, and `requestId`. Timeouts throw `VaultSdkTimeoutError`.
+
+```typescript
+import { createVaultSdkClient, VaultSdkError, VaultSdkTimeoutError } from '@nt2/vault-sdk';
+
+try {
+	await client.items.forCategory('note').create({ title: 'Memo' });
+} catch (error) {
+	if (error instanceof VaultSdkTimeoutError) {
+		showToast('Vault did not respond. Try again.');
+		return;
+	}
+	if (error instanceof VaultSdkError) {
+		switch (error.code) {
+			case 'LOCKED':
+				showLockedPanel();
+				break;
+			case 'PERMISSION_DENIED':
+				showEmptyState();
+				break;
+			default:
+				showRetry(error.message);
+		}
+	}
+}
+```
+
+Use `instanceof VaultSdkError` — do not parse raw `ERR` envelopes in application code when the SDK client is available.
+
 ```mermaid
 flowchart TD
  CALL["SDK call"]
@@ -161,5 +192,20 @@ flowchart TD
  CALL --> PD
  CALL --> PM
 ```
+
+---
+
+## Appendix C — Advanced wire protocol
+
+Use this only when you **cannot** bundle `@nt2/vault-sdk` (e.g. a zero-build static HTML prototype). Production catalog apps should prefer the typed client ([§2](#sdk-first-client-recommended)).
+
+Wire envelopes are defined in `@nt2/vault-sdk-protocol`. Pattern:
+
+1. Generate a UUID `id` per request.
+2. `window.parent.postMessage({ protocolVersion: 1, id, type, … }, '*')`.
+3. Listen for `{ id, type: 'OK' | 'ERR', … }` on `window.addEventListener('message', …)`.
+4. Enforce a timeout (e.g. 10 s) so the UI never hangs.
+
+Import `PROTOCOL_VERSION`, `isVaultSdkResponse`, and request/response types from `@nt2/vault-sdk-protocol` in TypeScript projects — do not hard-code a stale protocol integer.
 
 ---

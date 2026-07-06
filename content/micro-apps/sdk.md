@@ -1,7 +1,43 @@
 ---
 title: Vault SDK reference
-description: RPC types, permissions, and feed SDK summary.
+description: @nt2/vault-sdk client API, RPC types, permissions, errors, and wire protocol.
 ---
+
+## @nt2/vault-sdk client
+
+Install and bundle the typed iframe client (see [Quick start](https://nt2-community.github.io/developer-docs/micro-apps/quick-start) for a full example):
+
+```bash
+npm install @nt2/vault-sdk
+```
+
+```typescript
+import { createVaultSdkClient, VaultSdkError } from '@nt2/vault-sdk';
+
+const client = createVaultSdkClient();
+const { rows } = await client.items.forCategory('note').list();
+```
+
+### Client API surface
+
+`createVaultSdkClient()` returns typed Promise-based methods:
+
+| Area | Methods |
+|------|---------|
+| Core | `ping()`, `getStatus()`, `destroy()` |
+| `items` | `list`, `read`, `create`, `update`, `forCategory(category)` |
+| `feeds` | `list`, `listEntries`, `readEntry`, `publishEntry`, `markEntryRead`, `pinEntry`, `create`, `archive`, `subscribeEntries` |
+| `events` | `subscribe` — domain/sync `EVENT_NOTIFY` pushes |
+| `platform` | `shareText` |
+| `contactProfile` | `get(contactId)` |
+
+Subscription handles expose `unsubscribe()`. `destroy()` clears listeners, cancels pending requests, and unsubscribes active push handlers.
+
+**Packages:** `@nt2/vault-sdk` (client) depends on `@nt2/vault-sdk-protocol` (wire types). For Vitest without a vault host, import `createMockVaultSdkHost` from `@nt2/vault-sdk/testing`.
+
+Full walkthrough: [Quick start](https://nt2-community.github.io/developer-docs/micro-apps/quick-start).
+
+## Wire protocol and permissions
 
 ## 3. Vault SDK reference
 
@@ -135,5 +171,84 @@ Response payload (`OK`):
 Returns `null` when the vault is locked or no active profile view exists — do not treat `null` as an error.
 
 Raw `encryptedPayload` / `iv` values are never exposed to the sandbox.
+
+---
+
+## Appendix B — SDK error handling
+
+Map every error to user-facing copy and app behavior. **Never** display raw `code` strings in the UI.
+
+| Code | User-facing message (example) | App behavior |
+|------|------------------------------|--------------|
+| `LOCKED` | "Vault is locked. Unlock in the main app to continue." | Clear secrets; disable writes; show locked panel |
+| `NOT_WRITER` | "Another tab is editing this vault. Switch tabs and try again." | Show retry button; do not loop |
+| `PERMISSION_DENIED` | "This app doesn't have access to that data." | Empty state; no crash |
+| `PROTOCOL_MISMATCH` | "This app needs an update for your vault version." | Disable writes; link to update/docs |
+| `BAD_REQUEST` | "Check the highlighted fields and try again." | Inline validation |
+| `NOT_FOUND` | "That item is no longer available." | Refresh list |
+| `NOT_INSTALLED` | "App is not installed." | (Usually host-level — show reinstall hint) |
+| `INTEGRITY` | "Installation is corrupted. Reinstall the app." | Block usage; prompt reinstall |
+| `INTERNAL` | "Something went wrong. Try again." | Log internally in dev only; offer retry |
+
+### Using `VaultSdkError` in TypeScript
+
+When you use `@nt2/vault-sdk`, failed RPCs throw `VaultSdkError` with `code`, `message`, and `requestId`. Timeouts throw `VaultSdkTimeoutError`.
+
+```typescript
+import { createVaultSdkClient, VaultSdkError, VaultSdkTimeoutError } from '@nt2/vault-sdk';
+
+try {
+	await client.items.forCategory('note').create({ title: 'Memo' });
+} catch (error) {
+	if (error instanceof VaultSdkTimeoutError) {
+		showToast('Vault did not respond. Try again.');
+		return;
+	}
+	if (error instanceof VaultSdkError) {
+		switch (error.code) {
+			case 'LOCKED':
+				showLockedPanel();
+				break;
+			case 'PERMISSION_DENIED':
+				showEmptyState();
+				break;
+			default:
+				showRetry(error.message);
+		}
+	}
+}
+```
+
+Use `instanceof VaultSdkError` — do not parse raw `ERR` envelopes in application code when the SDK client is available.
+
+```mermaid
+flowchart TD
+ CALL["SDK call"]
+ OK["OK → render"]
+ LOCKED["LOCKED → clear + locked UI"]
+ NW["NOT_WRITER → warning + retry"]
+ PD["PERMISSION_DENIED → empty state"]
+ PM["PROTOCOL_MISMATCH → update message"]
+ CALL --> OK
+ CALL --> LOCKED
+ CALL --> NW
+ CALL --> PD
+ CALL --> PM
+```
+
+---
+
+## Appendix C — Advanced wire protocol
+
+Use this only when you **cannot** bundle `@nt2/vault-sdk` (e.g. a zero-build static HTML prototype). Production catalog apps should prefer the typed client ([§2](#sdk-first-client-recommended)).
+
+Wire envelopes are defined in `@nt2/vault-sdk-protocol`. Pattern:
+
+1. Generate a UUID `id` per request.
+2. `window.parent.postMessage({ protocolVersion: 1, id, type, … }, '*')`.
+3. Listen for `{ id, type: 'OK' | 'ERR', … }` on `window.addEventListener('message', …)`.
+4. Enforce a timeout (e.g. 10 s) so the UI never hangs.
+
+Import `PROTOCOL_VERSION`, `isVaultSdkResponse`, and request/response types from `@nt2/vault-sdk-protocol` in TypeScript projects — do not hard-code a stale protocol integer.
 
 ---
