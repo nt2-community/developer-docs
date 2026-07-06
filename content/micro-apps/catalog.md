@@ -7,7 +7,7 @@ description: Build, sign, and list apps on the community catalog.
 
 ### Build pipeline (recommended)
 
-1. **Develop** UI with **`@nt2/vault-sdk`** (`createVaultSdkClient`); pin `sdkVersion` in `manifest.json` to the same semver.
+1. **Develop** UI with **`@nt2/vault-sdk`** (`createVaultClient`); pin `sdkVersion` in `manifest.json` to the same semver.
 2. **Bundle** static assets — no remote runtime dependencies.
 3. **Compute** `entry.integrity` over the exact entry bytes shipped.
 4. **Sign** canonical manifest JSON with your Vault Key DID private key; set `publisher` + `signature`.
@@ -152,7 +152,7 @@ Map every error to user-facing copy and app behavior. **Never** display raw `cod
 When you use `@nt2/vault-sdk`, failed RPCs throw `VaultSdkError` with `code`, `message`, and `requestId`. Timeouts throw `VaultSdkTimeoutError`.
 
 ```typescript
-import { createVaultSdkClient, VaultSdkError, VaultSdkTimeoutError } from '@nt2/vault-sdk';
+import { createVaultClient, VaultSdkError, VaultSdkTimeoutError } from '@nt2/vault-sdk';
 
 try {
 	await client.items.forCategory('note').create({ title: 'Memo' });

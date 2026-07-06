@@ -12,15 +12,15 @@ npm install @nt2/vault-sdk
 ```
 
 ```typescript
-import { createVaultSdkClient, VaultSdkError } from '@nt2/vault-sdk';
+import { createVaultClient, VaultSdkError } from '@nt2/vault-sdk';
 
-const client = createVaultSdkClient();
+const client = createVaultClient();
 const { rows } = await client.items.forCategory('note').list();
 ```
 
 ### Client API surface
 
-`createVaultSdkClient()` returns typed Promise-based methods:
+`createVaultClient()` returns typed Promise-based methods:
 
 | Area | Methods |
 |------|---------|
@@ -195,7 +195,7 @@ Map every error to user-facing copy and app behavior. **Never** display raw `cod
 When you use `@nt2/vault-sdk`, failed RPCs throw `VaultSdkError` with `code`, `message`, and `requestId`. Timeouts throw `VaultSdkTimeoutError`.
 
 ```typescript
-import { createVaultSdkClient, VaultSdkError, VaultSdkTimeoutError } from '@nt2/vault-sdk';
+import { createVaultClient, VaultSdkError, VaultSdkTimeoutError } from '@nt2/vault-sdk';
 
 try {
 	await client.items.forCategory('note').create({ title: 'Memo' });

@@ -60,12 +60,12 @@ Install the typed client in your bundle build (esbuild, Vite, etc.):
 npm install @nt2/vault-sdk
 ```
 
-The hello pilot source uses `createVaultSdkClient()` — correlation, timeouts, and typed responses are handled for you:
+The hello pilot source uses `createVaultClient()` — correlation, timeouts, and typed responses are handled for you:
 
 ```typescript
-import { createVaultSdkClient, VaultSdkError } from '@nt2/vault-sdk';
+import { createVaultClient, VaultSdkError } from '@nt2/vault-sdk';
 
-const client = createVaultSdkClient();
+const client = createVaultClient();
 
 async function loadNotes() {
 	const status = await client.getStatus();
