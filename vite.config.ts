@@ -10,7 +10,7 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	resolve: {
 		alias: {
-			'@content': path.resolve(dir, '../../content')
+			'@content': path.resolve(dir, 'content')
 		}
 	}
 });
