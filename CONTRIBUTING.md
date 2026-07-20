@@ -18,4 +18,4 @@ This site publishes **author-facing** documentation for the NT² Vault ecosystem
 
 ## Questions
 
-Join [NT² Community on Discord](https://discord.gg/K3YmGgwvV).
+Join [NT² Community on Discord](https://discord.gg/MRRmbBe48).

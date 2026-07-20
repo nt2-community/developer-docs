@@ -5,5 +5,5 @@ export const siteMeta = {
 	microAppsCatalogUrl: 'https://nt2-community.github.io/micro-apps-catalog/',
 	templateCatalogUrl: 'https://nt2-community.github.io/category-templates-catalog/',
 	vaultMarketingUrl: 'https://nt2.me',
-	communityDiscordUrl: 'https://discord.gg/K3YmGgwvV'
+	communityDiscordUrl: 'https://discord.gg/MRRmbBe48'
 } as const;
